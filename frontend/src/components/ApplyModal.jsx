@@ -12,7 +12,7 @@ import {
   Send
 } from 'lucide-react';
 import { SAMPLE_CV_TEMPLATES } from '../data/mockData';
-import { parseCVText, computeAIMatch } from '../services/aiMatcher';
+import { parseCVTextLocal, computeAIMatchLocal, parseCVFileAPI, computeAIMatchAPI } from '../services/aiMatcher';
 
 export default function ApplyModal({ job, isOpen, onClose, onApplySuccess }) {
   const [selectedTemplate, setSelectedTemplate] = useState(SAMPLE_CV_TEMPLATES[0]);
@@ -23,6 +23,7 @@ export default function ApplyModal({ job, isOpen, onClose, onApplySuccess }) {
   const [coverLetter, setCoverLetter] = useState("I am excited to apply for this role. My experience aligns closely with your tech stack.");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [instantAnalysis, setInstantAnalysis] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState(null);
 
   if (!isOpen || !job) return null;
 
@@ -30,64 +31,92 @@ export default function ApplyModal({ job, isOpen, onClose, onApplySuccess }) {
     setSelectedTemplate(template);
     setCustomCVText(template.text);
     setCustomFileName(template.filename);
+    setUploadedFile(null);
 
-    const parsed = parseCVText(template.text);
+    const parsed = parseCVTextLocal(template.text);
     setCandidateName(parsed.name || "Candidate");
     setCandidateEmail(parsed.email || "candidate@devmail.io");
     setInstantAnalysis(null);
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setCustomFileName(file.name);
-      // Read file text
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target.result || "";
-        setCustomCVText(text);
-        const parsed = parseCVText(text);
+      setUploadedFile(file);
+      setIsAnalyzing(true);
+      try {
+        const parsed = await parseCVFileAPI(file);
         if (parsed.name) setCandidateName(parsed.name);
         if (parsed.email) setCandidateEmail(parsed.email);
-        setInstantAnalysis(null);
-      };
-      reader.readAsText(file);
+        
+        const match = await computeAIMatchAPI(parsed, job);
+        setInstantAnalysis({ parsed, match });
+      } catch (err) {
+        console.error("AI Analysis error:", err);
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
 
-  const handleRunInstantAIAnalysis = () => {
+  const handleRunInstantAIAnalysis = async () => {
     setIsAnalyzing(true);
-    setTimeout(() => {
-      const parsed = parseCVText(customCVText);
-      const match = computeAIMatch(parsed, job);
+    try {
+      let parsed;
+      if (uploadedFile) {
+        parsed = await parseCVFileAPI(uploadedFile);
+      } else {
+        parsed = parseCVTextLocal(customCVText);
+      }
+      const match = await computeAIMatchAPI(parsed, job);
       setInstantAnalysis({ parsed, match });
+    } catch (err) {
+      console.error(err);
+    } finally {
       setIsAnalyzing(false);
-    }, 600);
+    }
   };
 
-  const handleSubmitApplication = (e) => {
+  const handleSubmitApplication = async (e) => {
     e.preventDefault();
-    const parsed = parseCVText(customCVText);
-    const match = instantAnalysis?.match || computeAIMatch(parsed, job);
+    setIsAnalyzing(true);
+    let parsed, match;
+    try {
+      if (instantAnalysis) {
+        parsed = instantAnalysis.parsed;
+        match = instantAnalysis.match;
+      } else if (uploadedFile) {
+        parsed = await parseCVFileAPI(uploadedFile);
+        match = await computeAIMatchAPI(parsed, job);
+      } else {
+        parsed = parseCVTextLocal(customCVText);
+        match = await computeAIMatchAPI(parsed, job);
+      }
 
-    onApplySuccess({
-      jobId: job.id,
-      candidateName,
-      candidateEmail,
-      candidateAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-      headline: `${parsed.yearsOfExperience || 3} Yrs Exp • ${parsed.skills?.slice(0, 3).join(', ') || 'Software Engineer'}`,
-      location: "San Francisco, CA (Candidate)",
-      appliedDate: new Date().toISOString().split('T')[0],
-      status: match.overallMatch >= 80 ? "Under Review" : "Applied",
-      cvFileName: customFileName,
-      cvSkills: parsed.skills || [],
-      cvExperienceYears: parsed.yearsOfExperience || 3,
-      cvEducation: parsed.education || "Bachelor Degree",
-      coverLetter,
-      aiAnalysis: match
-    });
+      onApplySuccess({
+        jobId: job.id,
+        candidateName,
+        candidateEmail,
+        candidateAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+        headline: `${parsed.estimated_years_experience || parsed.yearsOfExperience || 3} Yrs Exp • ${parsed.skills?.slice(0, 3).join(', ') || 'Software Development'}`,
+        location: "San Francisco, CA (Candidate)",
+        appliedDate: new Date().toISOString().split('T')[0],
+        status: match.overallMatch >= 80 ? "Under Review" : "Applied",
+        cvFileName: customFileName,
+        cvSkills: parsed.skills || [],
+        cvExperienceYears: parsed.estimated_years_experience || parsed.yearsOfExperience || 3,
+        cvEducation: parsed.education || ["Bachelor of Science"],
+        coverLetter,
+        aiAnalysis: match
+      });
 
-    onClose();
+      onClose();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (

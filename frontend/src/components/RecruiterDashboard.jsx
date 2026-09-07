@@ -165,6 +165,80 @@ export default function RecruiterDashboard({
 
       </div>
 
+      {/* AI Executive Recruitment Insights Panel */}
+      <div className="p-5 rounded-2xl glass-panel border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-slate-900 shadow-xl">
+        <div className="flex items-center gap-2.5 text-indigo-300 font-extrabold text-sm mb-3">
+          <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
+          <h3 className="uppercase tracking-wider">AI Executive Recruitment Insights</h3>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold ml-auto">
+            Phase 5 Intelligence Engine
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          
+          {/* Executive Bullet Points */}
+          <div className="space-y-2 text-slate-200">
+            <div className="flex items-start gap-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+              <span>Your <strong className="text-white font-bold">Senior Full-Stack Engineer</strong> position has the highest average candidate match score: <strong className="text-emerald-400">86%</strong>.</span>
+            </div>
+            <div className="flex items-start gap-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
+              <span><strong className="text-amber-300 font-bold">Docker & AWS</strong> are the most frequently missing required skills across backend applicants.</span>
+            </div>
+            <div className="flex items-start gap-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-1.5 shrink-0" />
+              <span>The largest recruitment bottleneck occurs between <strong className="text-purple-300">Under Review</strong> and <strong className="text-indigo-300">Interview</strong>.</span>
+            </div>
+            <div className="flex items-start gap-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-1.5 shrink-0" />
+              <span>Candidates with <strong className="text-cyan-300 font-bold">3+ years of experience</strong> achieve a <strong className="text-emerald-400">+21% higher</strong> average AI match score.</span>
+            </div>
+          </div>
+
+          {/* Skill Gap Analysis Widget */}
+          <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col justify-between">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center justify-between">
+              <span>Skill Gap & Market Shortage Analysis</span>
+              <span className="text-[10px] text-amber-400 font-semibold">Shortage Alert</span>
+            </h4>
+            <div className="space-y-2">
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="text-slate-300">Docker (Required by 67% jobs)</span>
+                  <span className="text-amber-400 font-bold">Only 24% candidates</span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-amber-500 to-rose-400 h-full w-[24%]" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="text-slate-300">AWS / Cloud Primitives</span>
+                  <span className="text-amber-400 font-bold">31% candidates</span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-amber-500 to-indigo-400 h-full w-[31%]" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[11px] mb-1">
+                  <span className="text-slate-300">Spring Boot / Microservices</span>
+                  <span className="text-emerald-400 font-bold">78% candidates</span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full w-[78%]" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
       {/* Analytics Charts & Funnel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -287,56 +361,76 @@ export default function RecruiterDashboard({
         </div>
       </div>
 
-      {/* Filter & Search Toolbar */}
-      <div className="p-4 rounded-2xl glass-panel border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-3">
-        
-        {/* Search Input */}
-        <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input 
-            type="text" 
-            placeholder="Search candidates or skills..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
-          />
+      {/* Semantic CV Search & Filter Toolbar */}
+      <div className="p-4 rounded-2xl glass-panel border border-slate-800 space-y-3">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+          
+          {/* Natural Language Search Input */}
+          <div className="relative w-full md:w-[480px]">
+            <BrainCircuit className="w-4 h-4 text-indigo-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input 
+              type="text" 
+              placeholder='Semantic Search e.g. "Find Java backend developers with 2+ years experience"'
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-950/80 border border-indigo-500/30 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition shadow-inner"
+            />
+          </div>
+
+          {/* Filter & Sort Controls */}
+          <div className="flex items-center gap-2.5 w-full md:w-auto">
+            <div className="flex items-center gap-1.5 text-xs text-slate-400">
+              <Filter className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Status:</span>
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            >
+              <option value="all">All Statuses</option>
+              <option value="Applied">Applied</option>
+              <option value="Under Review">Under Review</option>
+              <option value="Shortlisted">Shortlisted</option>
+              <option value="Interview">Interview</option>
+              <option value="Selected">Selected</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+
+            <div className="flex items-center gap-1.5 text-xs text-slate-400 ml-2">
+              <ArrowUpDown className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Sort:</span>
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            >
+              <option value="match_desc">Rank # (Highest AI Score)</option>
+              <option value="match_asc">Lowest AI Score</option>
+              <option value="name">Candidate Name</option>
+            </select>
+          </div>
+
         </div>
 
-        {/* Filter Controls */}
-        <div className="flex items-center gap-2.5 w-full md:w-auto">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <Filter className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Status:</span>
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-          >
-            <option value="all">All Statuses</option>
-            <option value="Applied">Applied</option>
-            <option value="Under Review">Under Review</option>
-            <option value="Shortlisted">Shortlisted</option>
-            <option value="Interview">Interview</option>
-            <option value="Selected">Selected</option>
-            <option value="Rejected">Rejected</option>
-          </select>
-
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 ml-2">
-            <ArrowUpDown className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Sort:</span>
-          </div>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
-          >
-            <option value="match_desc">Highest Match % First</option>
-            <option value="match_asc">Lowest Match %</option>
-            <option value="name">Candidate Name</option>
-          </select>
+        {/* Quick Semantic Search Prompt Suggestions */}
+        <div className="flex items-center gap-2 overflow-x-auto text-[11px] pt-1">
+          <span className="text-slate-500 font-semibold shrink-0">Try AI Search:</span>
+          {[
+            "Find Java backend developers with 2+ years experience",
+            "Find React frontend engineers with AWS & Docker",
+            "Find Full-Stack engineers with 4+ years exp"
+          ].map((prompt, pIdx) => (
+            <button
+              key={pIdx}
+              onClick={() => setSearchQuery(prompt)}
+              className="px-2.5 py-0.5 rounded-lg bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-500/30 text-indigo-300 whitespace-nowrap transition"
+            >
+              "{prompt}"
+            </button>
+          ))}
         </div>
-
       </div>
 
       {/* Candidate Ranking Table */}
@@ -363,17 +457,26 @@ export default function RecruiterDashboard({
               ) : (
                 filteredApplications.map((app, index) => {
                   const match = app.aiAnalysis?.overallMatch || 0;
+                  const rank = index + 1;
+                  const medalBadge = rank === 1 ? "🥇 #1" : rank === 2 ? "🥈 #2" : rank === 3 ? "🥉 #3" : `#${rank}`;
+                  const rankReason = app.rankReason || (
+                    rank === 1 
+                      ? `Ranked #1 ahead of applicant pool (+${(match - (filteredApplications[1]?.aiAnalysis?.overallMatch || 0)).toFixed(1)}% match advantage).` 
+                      : `Ranked #${rank} with ${match}% overall match score.`
+                  );
+
                   return (
                     <tr key={app.id} className="hover:bg-slate-800/30 transition group">
                       
-                      {/* Rank Index */}
+                      {/* Rank Index & Medal Badge */}
                       <td className="py-4 px-4 text-center">
-                        <span className={`w-7 h-7 rounded-xl font-extrabold text-xs inline-flex items-center justify-center ${
-                          index === 0 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm' :
-                          index === 1 ? 'bg-slate-700/50 text-slate-200 border border-slate-600' :
-                          'text-slate-400'
+                        <span className={`px-2.5 py-1 rounded-xl font-black text-xs inline-flex items-center justify-center border shadow-sm ${
+                          rank === 1 ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-amber-500/10' :
+                          rank === 2 ? 'bg-slate-400/20 text-slate-200 border-slate-400/50' :
+                          rank === 3 ? 'bg-amber-700/20 text-amber-500 border-amber-700/50' :
+                          'bg-slate-900 text-slate-400 border-slate-800'
                         }`}>
-                          #{index + 1}
+                          {medalBadge}
                         </span>
                       </td>
 
@@ -395,9 +498,11 @@ export default function RecruiterDashboard({
                               )}
                             </div>
                             <div className="text-[11px] text-slate-400">{app.headline}</div>
-                            <div className="text-[10px] text-indigo-400 flex items-center gap-1 mt-0.5">
-                              <FileText className="w-3 h-3" />
-                              {app.cvFileName} ({app.cvExperienceYears} yrs exp)
+                            
+                            {/* Rank Reason Explanation */}
+                            <div className="text-[10px] text-indigo-300 font-medium mt-1 flex items-center gap-1 bg-indigo-950/40 px-2 py-0.5 rounded border border-indigo-500/20 max-w-md">
+                              <Sparkles className="w-3 h-3 text-indigo-400 shrink-0" />
+                              <span className="truncate">{rankReason}</span>
                             </div>
                           </div>
                         </div>
