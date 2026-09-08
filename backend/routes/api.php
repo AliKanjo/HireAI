@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AIController;
@@ -15,7 +16,7 @@ use App\Http\Controllers\Api\AnalyticsController;
 |--------------------------------------------------------------------------
 */
 
-// Public Endpoints
+// Public Auth Endpoints (UC1a: Public Candidate & Recruiter Auth)
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
@@ -54,4 +55,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Recruiter Analytics
     Route::get('/recruiter/analytics', [AnalyticsController::class, 'dashboardMetrics']);
+
+    // Admin-Only Operations (UC1b: Admin Provisioning & Role Governance)
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/users', [AdminUserController::class, 'index']);
+        Route::patch('/admin/users/{id}/role', [AdminUserController::class, 'updateRole']);
+        Route::patch('/admin/users/{id}/status', [AdminUserController::class, 'toggleStatus']);
+    });
 });

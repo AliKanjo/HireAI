@@ -56,7 +56,8 @@ graph LR
     Admin((Administrator))
 
     subgraph HireAISystem ["HireAI Platform"]
-        UC1[Register & Login / Auth]
+        UC1a[UC1a: Register & Login (Candidate / Recruiter Public Auth)]
+        UC1b[UC1b: Provision Admin Account & Role Control (Admin Only)]
         UC2[Browse & Search Jobs]
         UC3[Upload CV & Apply]
         UC4[Track Application Pipeline]
@@ -72,12 +73,12 @@ graph LR
         UC14[System Audit & Monitoring]
     end
 
-    Candidate --> UC1
+    Candidate --> UC1a
     Candidate --> UC2
     Candidate --> UC3
     Candidate --> UC4
 
-    Recruiter --> UC1
+    Recruiter --> UC1a
     Recruiter --> UC5
     Recruiter --> UC6
     Recruiter --> UC7
@@ -87,7 +88,8 @@ graph LR
     Recruiter --> UC11
     Recruiter --> UC12
 
-    Admin --> UC1
+    Admin --> UC1a
+    Admin --> UC1b
     Admin --> UC13
     Admin --> UC14
 ```
