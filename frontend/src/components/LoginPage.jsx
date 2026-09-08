@@ -1,25 +1,31 @@
 import React, { useState } from 'react';
 import { 
   Sparkles, 
-  Briefcase, 
-  UserCheck, 
   ShieldCheck, 
   Mail, 
   Lock, 
   User, 
-  ArrowRight,
-  CheckCircle2,
-  Building2,
-  Zap,
-  ShieldAlert
+  Eye, 
+  EyeOff, 
+  ArrowRight, 
+  Zap, 
+  AlertTriangle,
+  Briefcase,
+  UserCheck
 } from 'lucide-react';
 
 export default function LoginPage({ onLogin }) {
-  const [authMode, setAuthMode] = useState('demo'); // 'demo', 'login', 'register'
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [selectedRole, setSelectedRole] = useState('recruiter');
+  const [view, setView] = useState('signin'); // 'signin', 'signup', 'demo'
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Form states
+  const [siEmail, setSiEmail] = useState('');
+  const [siPass, setSiPass] = useState('');
+  
+  const [suName, setSuName] = useState('');
+  const [suEmail, setSuEmail] = useState('');
+  const [suPass, setSuPass] = useState('');
+  const [selectedRole, setSelectedRole] = useState('candidate'); // 'candidate', 'recruiter'
 
   const demoAccounts = [
     {
@@ -31,7 +37,7 @@ export default function LoginPage({ onLogin }) {
       email: 'david.m@technovadynamics.io',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
       badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
-      description: 'Access Candidate Ranking, Semantic Search, Skill Gap Analysis, RAG Copilot & Interview AI',
+      description: 'Access Candidate Ranking, Semantic Search, Skill Gap Analysis & AI Insights',
       icon: Briefcase
     },
     {
@@ -43,7 +49,7 @@ export default function LoginPage({ onLogin }) {
       email: 'ali.kanjo@devmail.io',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
       badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-      description: 'Access Recommended Jobs, AI Match Breakdown, Application Tracker & Interview Invites',
+      description: 'Access Recommended Jobs, AI Match Score, Applications Tracker & Interview Invites',
       icon: UserCheck
     },
     {
@@ -55,12 +61,45 @@ export default function LoginPage({ onLogin }) {
       email: 'admin@hireai.io',
       avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
       badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
-      description: 'Access System Governance, User Management, AI Microservice Logs & Platform Telemetry',
+      description: 'Access System Governance, User Privileges, AI Microservice Audit & Telemetry',
       icon: ShieldCheck
     }
   ];
 
-  const handleSelectDemo = (account) => {
+  const handleSignInSubmit = (e) => {
+    e.preventDefault();
+    if (!siEmail) return;
+    
+    // Default sign in role detection or preset fallback
+    const isRecruiter = siEmail.includes('recruiter') || siEmail.includes('technova');
+    const isAdmin = siEmail.includes('admin');
+    const role = isAdmin ? 'admin' : isRecruiter ? 'recruiter' : 'candidate';
+    
+    onLogin({
+      name: siEmail.split('@')[0].replace('.', ' '),
+      email: siEmail,
+      role: role,
+      title: role === 'admin' ? 'Platform Administrator' : role === 'recruiter' ? 'Talent Manager' : 'Software Candidate',
+      company: role === 'recruiter' ? 'TechNova Dynamics' : 'HireAI Workspace',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
+    });
+  };
+
+  const handleSignUpSubmit = (e) => {
+    e.preventDefault();
+    if (!suEmail) return;
+
+    onLogin({
+      name: suName || suEmail.split('@')[0],
+      email: suEmail,
+      role: selectedRole,
+      title: selectedRole === 'recruiter' ? 'Recruiter Manager' : 'Software Developer Candidate',
+      company: selectedRole === 'recruiter' ? 'TechNova Dynamics' : 'Applicant Candidate',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
+    });
+  };
+
+  const handleDemoSelect = (account) => {
     onLogin({
       name: account.name,
       email: account.email,
@@ -71,233 +110,304 @@ export default function LoginPage({ onLogin }) {
     });
   };
 
-  const handleSubmitCustom = (e) => {
-    e.preventDefault();
-    if (!email) return;
-
-    const roleName = authMode === 'register' ? selectedRole : 'recruiter';
-    onLogin({
-      name: name || email.split('@')[0],
-      email: email,
-      role: roleName,
-      title: roleName === 'recruiter' ? 'Recruiter Manager' : roleName === 'admin' ? 'Administrator' : 'Software Candidate',
-      company: roleName === 'recruiter' ? 'TechNova Dynamics' : 'HireAI',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col justify-center items-center p-4 sm:p-6 selection:bg-indigo-500 selection:text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[#05070d] text-[#f4f6fb] flex items-center justify-center p-4 font-sans selection:bg-indigo-500 selection:text-white relative overflow-hidden">
       
-      {/* Dynamic Background Effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Background Radial Glow */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(1200px 600px at 50% -10%, rgba(109,91,246,0.16), transparent 60%)'
+        }}
+      />
 
-      {/* Main Login Box */}
-      <div className="w-full max-w-2xl rounded-3xl bg-slate-900/90 border border-slate-800 shadow-2xl overflow-hidden backdrop-blur-xl z-10 animate-fadeIn">
+      {/* Main Login Card */}
+      <div className="w-[440px] max-w-full bg-gradient-to-b from-[#0b0e17] to-[#10131f] border border-[#1e2333] rounded-[14px] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.7)] overflow-hidden z-10 animate-fadeIn">
         
-        {/* Top Header */}
-        <div className="p-8 border-b border-slate-800/80 bg-slate-950/60 text-center relative">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 shadow-xl shadow-indigo-500/30 mb-4">
-            <Sparkles className="w-7 h-7 text-white" />
+        {/* Head */}
+        <div className="p-9 sm:p-10 pb-7 text-center border-b border-[#171b28]">
+          <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-[#6d5bf6] to-[#22b8e6] flex items-center justify-center shadow-[0_10px_30px_-8px_rgba(109,91,246,0.6)]">
+            <Sparkles className="w-6.5 h-6.5 text-white" />
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl font-extrabold m-0 mb-1.5 tracking-tight text-[#f4f6fb]">
             HireAI Login Portal
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-md mx-auto">
-            AI-Powered Recruitment, Semantic Search & Pre-Screening Engine
+          <p className="text-[13.5px] text-[#9aa3b8] m-0 mb-4 leading-relaxed">
+            AI-Powered Recruitment, Semantic Search &amp; Pre-Screening Engine
           </p>
-
-          <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold">
-            <ShieldAlert className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Role-Based Access Control (RBAC) Enforced</span>
-          </div>
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[rgba(109,91,246,0.12)] border border-[rgba(109,91,246,0.3)] text-[#b8adfa] text-[12.5px] font-semibold">
+            <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+            Role-Based Access Control (RBAC) Enforced
+          </span>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="px-8 pt-4 flex border-b border-slate-800/60 bg-slate-950/30">
-          <button
-            onClick={() => setAuthMode('demo')}
-            className={`pb-3 px-5 text-xs font-bold transition border-b-2 ${
-              authMode === 'demo'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            ⚡ Select Account Demo (Recommended)
-          </button>
-          <button
-            onClick={() => setAuthMode('login')}
-            className={`pb-3 px-5 text-xs font-bold transition border-b-2 ${
-              authMode === 'login'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Sign In with Email
-          </button>
-          <button
-            onClick={() => setAuthMode('register')}
-            className={`pb-3 px-5 text-xs font-bold transition border-b-2 ${
-              authMode === 'register'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Register New User
-          </button>
-        </div>
+        {/* Body */}
+        <div className="p-7 sm:p-9 pt-7 pb-8">
 
-        {/* Login Body */}
-        <div className="p-8">
-          {authMode === 'demo' ? (
-            <div className="space-y-4">
-              <p className="text-xs text-slate-400 mb-2 font-semibold">
-                Select an account below to log in directly into your role-restricted space:
-              </p>
+          {/* DEMO PICKER VIEW */}
+          {view === 'demo' && (
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-[#b8adfa] uppercase tracking-wider">Select Demo Account</span>
+                <button 
+                  onClick={() => setView('signin')}
+                  className="text-xs font-bold text-[#22b8e6] hover:underline"
+                >
+                  Back to Sign In
+                </button>
+              </div>
 
-              {demoAccounts.map(acc => {
-                const IconComponent = acc.icon;
-                return (
-                  <div
-                    key={acc.id}
-                    onClick={() => handleSelectDemo(acc)}
-                    className="group p-4 rounded-2xl border border-slate-800 bg-slate-950/60 hover:bg-indigo-950/40 hover:border-indigo-500/60 transition cursor-pointer flex items-center justify-between shadow-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <img 
-                        src={acc.avatar} 
-                        alt={acc.name} 
-                        className="w-12 h-12 rounded-full object-cover ring-2 ring-indigo-500/30"
-                      />
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-white text-base group-hover:text-indigo-300 transition">
-                            {acc.name}
-                          </span>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${acc.badgeColor}`}>
-                            {acc.role}
-                          </span>
-                        </div>
-                        <div className="text-xs text-slate-300 font-medium">{acc.title}</div>
-                        <div className="text-[11px] text-slate-400 mt-1 max-w-md">{acc.description}</div>
-                      </div>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-slate-900 group-hover:bg-indigo-600 text-slate-400 group-hover:text-white transition shrink-0">
-                      <ArrowRight className="w-5 h-5" />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <form onSubmit={handleSubmitCustom} className="space-y-4 max-w-md mx-auto">
-              {authMode === 'register' && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Full Name</label>
-                  <div className="relative">
-                    <User className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="e.g. David Miller" 
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              {demoAccounts.map(acc => (
+                <div
+                  key={acc.id}
+                  onClick={() => handleDemoSelect(acc)}
+                  className="group p-3.5 rounded-xl border border-[#1e2333] bg-[#060810] hover:bg-indigo-950/40 hover:border-[#6d5bf6] transition cursor-pointer flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={acc.avatar} 
+                      alt={acc.name} 
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-[#6d5bf6]/30"
                     />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-sm group-hover:text-indigo-300 transition">
+                          {acc.name}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${acc.badgeColor}`}>
+                          {acc.role}
+                        </span>
+                      </div>
+                      <div className="text-[11.5px] text-[#9aa3b8] mt-0.5">{acc.title}</div>
+                    </div>
                   </div>
+                  <ArrowRight className="w-4 h-4 text-[#666e83] group-hover:text-white transition" />
                 </div>
-              )}
+              ))}
+            </div>
+          )}
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Email Address</label>
+          {/* SIGN IN VIEW */}
+          {view === 'signin' && (
+            <form onSubmit={handleSignInSubmit}>
+              <div className="mb-4">
+                <label className="block text-[13px] font-semibold text-[#f4f6fb] mb-2" htmlFor="si-email">
+                  Email Address
+                </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                  <Mail className="w-4 h-4 text-[#666e83] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input 
+                    id="si-email" 
                     type="email" 
                     required
-                    placeholder="user@technovadynamics.io" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    placeholder="you@company.com" 
+                    value={siEmail}
+                    onChange={(e) => setSiEmail(e.target.value)}
+                    className="w-full bg-[#060810] border border-[#1e2333] rounded-lg py-3 pl-10 pr-3 text-[#f4f6fb] text-sm outline-none focus:border-[#6d5bf6] focus:ring-2 focus:ring-[#6d5bf6]/20 transition"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
+              <div className="mb-4">
+                <label className="block text-[13px] font-semibold text-[#f4f6fb] mb-2" htmlFor="si-pass">
+                  Password
+                </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3.5" />
+                  <Lock className="w-4 h-4 text-[#666e83] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input 
-                    type="password" 
+                    id="si-pass" 
+                    type={showPassword ? "text" : "password"} 
                     required
-                    placeholder="••••••••••••" 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    placeholder="••••••••••" 
+                    value={siPass}
+                    onChange={(e) => setSiPass(e.target.value)}
+                    className="w-full bg-[#060810] border border-[#1e2333] rounded-lg py-3 pl-10 pr-10 text-[#f4f6fb] text-sm outline-none focus:border-[#6d5bf6] focus:ring-2 focus:ring-[#6d5bf6]/20 transition"
                   />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666e83] hover:text-[#9aa3b8] transition"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
-              {authMode === 'register' && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Assign Account Privilege Role</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('candidate')}
-                      className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition ${
-                        selectedRole === 'candidate'
-                          ? 'bg-emerald-600/30 border-emerald-500 text-emerald-300'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <UserCheck className="w-4 h-4" />
-                      <span>Candidate</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('recruiter')}
-                      className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition ${
-                        selectedRole === 'recruiter'
-                          ? 'bg-indigo-600/30 border-indigo-500 text-indigo-300'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <Briefcase className="w-4 h-4" />
-                      <span>Recruiter</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('admin')}
-                      className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition ${
-                        selectedRole === 'admin'
-                          ? 'bg-purple-600/30 border-purple-500 text-purple-300'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      <ShieldCheck className="w-4 h-4" />
-                      <span>Admin</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+              <div className="flex justify-between items-center mb-4.5 -mt-2">
+                <span></span>
+                <a href="#forgot" onClick={(e) => { e.preventDefault(); alert("Use Demo Login below to test any role instantly."); }} className="text-[12.5px] text-[#22b8e6] hover:underline">
+                  Forgot password?
+                </a>
+              </div>
+
+              <button 
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-gradient-to-r from-[#6d5bf6] to-[#22b8e6] text-white text-[14.5px] font-bold cursor-pointer transition hover:brightness-110 active:translate-y-0.5 shadow-md shadow-indigo-600/20"
+              >
+                <span>Sign In to Account</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <p className="text-center mt-4 text.sm text-[#9aa3b8] text-[13.5px]">
+                Don't have an account?{' '}
+                <button 
+                  type="button" 
+                  onClick={() => setView('signup')}
+                  className="text-[#22b8e6] font-bold hover:underline bg-transparent border-0 cursor-pointer p-0"
+                >
+                  Sign up
+                </button>
+              </p>
+
+              <div className="flex items-center gap-3 my-5 text-[#666e83] text-xs">
+                <div className="flex-1 h-[1px] bg-[#171b28]" />
+                <span>or</span>
+                <div className="flex-1 h-[1px] bg-[#171b28]" />
+              </div>
 
               <button
-                type="submit"
-                className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition hover:scale-[1.01] active:scale-[0.99] mt-2 flex items-center justify-center gap-2"
+                type="button"
+                onClick={() => setView('demo')}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-lg border border-dashed border-[#1e2333] hover:border-[#6d5bf6] text-[#9aa3b8] hover:text-white text-xs font-semibold bg-transparent transition"
               >
-                <span>{authMode === 'register' ? 'Register & Enter Dashboard' : 'Sign In to Account'}</span>
-                <ArrowRight className="w-4 h-4" />
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                <span>Try a demo account (1-Click Login)</span>
               </button>
             </form>
           )}
+
+          {/* SIGN UP VIEW */}
+          {view === 'signup' && (
+            <form onSubmit={handleSignUpSubmit}>
+              <div className="mb-4">
+                <label className="block text-[13px] font-semibold text-[#f4f6fb] mb-2" htmlFor="su-name">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-[#666e83] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input 
+                    id="su-name" 
+                    type="text" 
+                    required
+                    placeholder="e.g. David Miller" 
+                    value={suName}
+                    onChange={(e) => setSuName(e.target.value)}
+                    className="w-full bg-[#060810] border border-[#1e2333] rounded-lg py-3 pl-10 pr-3 text-[#f4f6fb] text-sm outline-none focus:border-[#6d5bf6] focus:ring-2 focus:ring-[#6d5bf6]/20 transition"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-[13px] font-semibold text-[#f4f6fb] mb-2" htmlFor="su-email">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-[#666e83] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input 
+                    id="su-email" 
+                    type="email" 
+                    required
+                    placeholder="you@company.com" 
+                    value={suEmail}
+                    onChange={(e) => setSuEmail(e.target.value)}
+                    className="w-full bg-[#060810] border border-[#1e2333] rounded-lg py-3 pl-10 pr-3 text-[#f4f6fb] text-sm outline-none focus:border-[#6d5bf6] focus:ring-2 focus:ring-[#6d5bf6]/20 transition"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-[13px] font-semibold text-[#f4f6fb] mb-2" htmlFor="su-pass">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-[#666e83] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input 
+                    id="su-pass" 
+                    type={showPassword ? "text" : "password"} 
+                    required
+                    placeholder="At least 10 characters" 
+                    value={suPass}
+                    onChange={(e) => setSuPass(e.target.value)}
+                    className="w-full bg-[#060810] border border-[#1e2333] rounded-lg py-3 pl-10 pr-10 text-[#f4f6fb] text-sm outline-none focus:border-[#6d5bf6] focus:ring-2 focus:ring-[#6d5bf6]/20 transition"
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666e83] hover:text-[#9aa3b8] transition"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Role Selection */}
+              <div className="mb-5">
+                <label className="block text-[13px] font-semibold text-[#f4f6fb] mb-2.5">
+                  I am signing up as a
+                </label>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div 
+                    onClick={() => setSelectedRole('candidate')}
+                    className={`border rounded-lg p-3.5 text-center cursor-pointer transition ${
+                      selectedRole === 'candidate'
+                        ? 'border-[#34d19a] bg-[rgba(52,209,154,0.08)]'
+                        : 'border-[#1e2333] bg-[#060810] hover:border-slate-700'
+                    }`}
+                  >
+                    <User className={`w-5 h-5 mx-auto mb-2 ${selectedRole === 'candidate' ? 'text-[#34d19a]' : 'text-[#9aa3b8]'}`} />
+                    <span className="text-[13.5px] font-bold text-white block">Candidate</span>
+                    <span className="text-[11.5px] text-[#666e83] block mt-0.5">Find &amp; apply to jobs</span>
+                  </div>
+
+                  <div 
+                    onClick={() => setSelectedRole('recruiter')}
+                    className={`border rounded-lg p-3.5 text-center cursor-pointer transition ${
+                      selectedRole === 'recruiter'
+                        ? 'border-[#8b7bf7] bg-[rgba(139,123,247,0.1)]'
+                        : 'border-[#1e2333] bg-[#060810] hover:border-slate-700'
+                    }`}
+                  >
+                    <Briefcase className={`w-5 h-5 mx-auto mb-2 ${selectedRole === 'recruiter' ? 'text-[#8b7bf7]' : 'text-[#9aa3b8]'}`} />
+                    <span className="text-[13.5px] font-bold text-white block">Recruiter</span>
+                    <span className="text-[11.5px] text-[#666e83] block mt-0.5">Hire &amp; screen talent</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Admin Note */}
+              <div className="flex gap-2.5 bg-[rgba(245,163,92,0.08)] border border-[rgba(245,163,92,0.25)] rounded-lg p-3 mb-5 text-[12px] text-[#d8b28c] leading-relaxed">
+                <AlertTriangle className="w-4 h-4 text-[#f5a35c] shrink-0 mt-0.5" />
+                <span>
+                  Admin access isn't self-service. Existing admins can promote your account from the dashboard once you're signed up.
+                </span>
+              </div>
+
+              <button 
+                type="submit"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-gradient-to-r from-[#6d5bf6] to-[#22b8e6] text-white text-[14.5px] font-bold cursor-pointer transition hover:brightness-110 active:translate-y-0.5 shadow-md shadow-indigo-600/20"
+              >
+                <span>Create Account</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <p className="text-center mt-4 text-[#9aa3b8] text-[13.5px]">
+                Already have an account?{' '}
+                <button 
+                  type="button" 
+                  onClick={() => setView('signin')}
+                  className="text-[#22b8e6] font-bold hover:underline bg-transparent border-0 cursor-pointer p-0"
+                >
+                  Sign in
+                </button>
+              </p>
+            </form>
+          )}
+
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-950/80 border-t border-slate-800/80 text-center text-xs text-slate-500">
-          HireAI v2.0 • FastAPI AI Microservice Engine • Protected RBAC Workspace
+        <div className="text-center p-4 border-t border-[#171b28] text-[#666e83] text-[11.5px] bg-[#060810]">
+          HireAI v2.0 · FastAPI AI Microservice Engine · Protected RBAC Workspace
         </div>
 
       </div>
