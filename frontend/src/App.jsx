@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
+import LoginPage from './components/LoginPage';
 import RecruiterDashboard from './components/RecruiterDashboard';
 import CandidatePortal from './components/CandidatePortal';
 import AdminPortal from './components/AdminPortal';
@@ -11,10 +12,12 @@ import ApplyModal from './components/ApplyModal';
 import CandidateCompareModal from './components/CandidateCompareModal';
 import AIRecruitmentAssistant from './components/AIRecruitmentAssistant';
 import { INITIAL_JOBS, INITIAL_APPLICATIONS } from './data/mockData';
-import { CheckCircle2, Sparkles, Bot, MessageSquare } from 'lucide-react';
+import { CheckCircle2, Sparkles, Bot } from 'lucide-react';
 
 export default function App() {
-  const [currentRole, setCurrentRole] = useState('recruiter'); // 'recruiter', 'candidate', 'admin'
+  // Current Authenticated User State (Null by default -> forces Login Page first)
+  const [currentUser, setCurrentUser] = useState(null);
+
   const [jobs, setJobs] = useState(INITIAL_JOBS);
   const [applications, setApplications] = useState(INITIAL_APPLICATIONS);
   const [selectedJobId, setSelectedJobId] = useState(INITIAL_JOBS[0].id);
@@ -36,7 +39,19 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Handlers
+  // Login handler
+  const handleLogin = (user) => {
+    setCurrentUser(user);
+    showToast(`Welcome back, ${user.name}! Logged into ${user.role.toUpperCase()} Workspace.`);
+  };
+
+  // Logout handler
+  const handleLogout = () => {
+    setCurrentUser(null);
+    showToast('Signed out of HireAI workspace.');
+  };
+
+  // Modal Handlers
   const handleOpenAIAnalysis = (app, job) => {
     setAnalysisModal({ isOpen: true, application: app, job: job || jobs.find(j => j.id === app.jobId) });
   };
@@ -96,19 +111,25 @@ export default function App() {
     showToast(`Application submitted! AI Match score: ${newApplication.aiAnalysis.overallMatch}%`);
   };
 
+  // 1. If not authenticated, force full-screen Login Page
+  if (!currentUser) {
+    return <LoginPage onLogin={handleLogin} />;
+  }
+
+  // 2. Authenticated View: Strictly route to user's assigned role dashboard
   return (
     <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
       
       {/* Top Navbar */}
       <Navbar 
-        currentRole={currentRole}
-        setCurrentRole={setCurrentRole}
+        currentUser={currentUser}
+        onLogout={handleLogout}
         onOpenCreateJob={() => setCreateJobModal(true)}
       />
 
-      {/* Main Content Area */}
+      {/* Main Content Area strictly guarded by RBAC Role */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {currentRole === 'recruiter' && (
+        {currentUser.role === 'recruiter' && (
           <RecruiterDashboard 
             jobs={jobs}
             applications={applications}
@@ -123,8 +144,9 @@ export default function App() {
           />
         )}
 
-        {currentRole === 'candidate' && (
+        {currentUser.role === 'candidate' && (
           <CandidatePortal 
+            currentUser={currentUser}
             jobs={jobs}
             applications={applications}
             onApplyJob={(job) => setApplyModal({ isOpen: true, job })}
@@ -132,7 +154,7 @@ export default function App() {
           />
         )}
 
-        {currentRole === 'admin' && (
+        {currentUser.role === 'admin' && (
           <AdminPortal 
             jobs={jobs}
             applications={applications}
@@ -147,7 +169,7 @@ export default function App() {
             <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
             <span className="font-semibold text-slate-400">HireAI</span> — AI-Powered Recruitment & CV Analysis Platform
           </div>
-          <div>FastAPI AI Microservice • Laravel 11 Architecture • React 18 SPA</div>
+          <div>FastAPI AI Microservice • RBAC Guard Active • React 18 SPA</div>
         </div>
       </footer>
 
