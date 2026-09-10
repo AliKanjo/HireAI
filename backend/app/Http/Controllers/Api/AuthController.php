@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -14,17 +13,26 @@ class AuthController extends Controller
     /**
      * Public Registration Endpoint
      * 
-     * Security Constraint: 'role' validation strictly limits input to 'candidate' or 'recruiter'.
-     * Public registration CANNOT produce an 'admin' account under any circumstances.
+     * Security Constraints:
+     * 1. 'role' validation strictly limits input to 'candidate' or 'recruiter'.
+     *    Public registration CANNOT produce an 'admin' account under any circumstances.
+     * 2. Password requires minimum 8 characters and optional confirmation match if provided.
      */
     public function register(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8',
             'role'     => 'required|in:candidate,recruiter', // Strictly excludes 'admin'
-        ]);
+        ];
+
+        // Add confirmed rule if password_confirmation field is present in payload
+        if ($request->has('password_confirmation')) {
+            $rules['password'] .= '|confirmed';
+        }
+
+        $validated = $request->validate($rules);
 
         // Explicitly create user without mass-assigning unvalidated role
         $user = new User();

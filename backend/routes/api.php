@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AIController;
 use App\Http\Controllers\Api\InterviewController;
 use App\Http\Controllers\Api\AnalyticsController;
+use App\Http\Middleware\CheckRole;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,9 +17,11 @@ use App\Http\Controllers\Api\AnalyticsController;
 |--------------------------------------------------------------------------
 */
 
-// Public Auth Endpoints (UC1a: Public Candidate & Recruiter Auth)
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [AuthController::class, 'login']);
+// Public Auth Endpoints (Throttled & Strictly Constrained)
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/login', [AuthController::class, 'login']);
+});
 
 Route::get('/jobs', [JobController::class, 'index']);
 Route::get('/jobs/{id}', [JobController::class, 'show']);
@@ -56,10 +59,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Recruiter Analytics
     Route::get('/recruiter/analytics', [AnalyticsController::class, 'dashboardMetrics']);
 
-    // Admin-Only Operations (UC1b: Admin Provisioning & Role Governance)
-    Route::middleware('role:admin')->group(function () {
+    // Admin-Only Operations (UC1b: Admin Provisioning & Role Control)
+    Route::middleware(CheckRole::class . ':admin')->group(function () {
         Route::get('/admin/users', [AdminUserController::class, 'index']);
-        Route::patch('/admin/users/{id}/role', [AdminUserController::class, 'updateRole']);
+        Route::patch('/admin/users/{id}/role', [AdminUserController::class, 'updateRole'])->middleware('throttle:20,1');
         Route::patch('/admin/users/{id}/status', [AdminUserController::class, 'toggleStatus']);
     });
 });
