@@ -2,12 +2,13 @@ services:
   - type: web
     name: hireai-ai-service
     runtime: python
+    plan: free
     rootDir: ai-service
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: GEMINI_API_KEY
-        sync: false   # You will set this manually in Render dashboard
+        sync: false
       - key: PYTHON_VERSION
         value: "3.11.0"
     healthCheckPath: /health
