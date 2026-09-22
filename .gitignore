@@ -11,7 +11,8 @@ __pycache__/
 *$py.class
 ai-service/__pycache__/
 ai-service/app/__pycache__/
-*.env
+.env
+frontend/.env
 .venv
 env/
 venv/

@@ -71,19 +71,45 @@ class InsightsRequest(BaseModel):
 def health_check():
     return {"status": "ok", "service": "HireAI AI Engine", "version": "1.5.0"}
 
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB limit
+ALLOWED_EXTENSIONS = {".pdf", ".txt", ".doc", ".docx"}
+
 @app.post("/api/ai/parse-cv")
 async def parse_cv_endpoint(file: UploadFile = File(...)):
-    """Upload and extract structured profile data from a CV file (PDF/Text)."""
+    """Upload and extract structured profile data from a CV file with input security validation."""
+    # 1. Sanitize filename against path traversal
+    filename = os.path.basename(file.filename or "cv_document.pdf")
+    ext = os.path.splitext(filename)[1].lower()
+
+    # 2. Extension validation
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Unsupported file format '{ext}'. Only PDF, TXT, DOC, and DOCX files are allowed."
+        )
+
     try:
         content = await file.read()
+
+        # 3. File size limit validation (10MB max)
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"File size ({len(content) / (1024*1024):.1f} MB) exceeds maximum allowed limit of 10 MB."
+            )
+
+        # 4. Extract raw text & parse CV details
         raw_text = extract_text_from_pdf_bytes(content)
         parsed = parse_cv_content(raw_text)
+
         return {
-            "filename": file.filename,
+            "filename": filename,
             "parsed_cv": parsed
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to parse CV: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to parse CV document: {str(e)}")
 
 @app.post("/api/ai/match-cv")
 async def match_cv_endpoint(payload: MatchRequest):

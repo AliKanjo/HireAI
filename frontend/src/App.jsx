@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import LoginPage from './components/LoginPage';
 import RecruiterDashboard from './components/RecruiterDashboard';
@@ -12,11 +12,13 @@ import ApplyModal from './components/ApplyModal';
 import CandidateCompareModal from './components/CandidateCompareModal';
 import AIRecruitmentAssistant from './components/AIRecruitmentAssistant';
 import { INITIAL_JOBS, INITIAL_APPLICATIONS } from './data/mockData';
-import { CheckCircle2, Sparkles, Bot } from 'lucide-react';
+import { CheckCircle2, Sparkles, Bot, Loader2 } from 'lucide-react';
+import { authApi } from './services/api';
 
 export default function App() {
   // Current Authenticated User State (Null by default -> forces Login Page first)
   const [currentUser, setCurrentUser] = useState(null);
+  const [rehydrating, setRehydrating] = useState(true); // true while checking saved token
 
   const [jobs, setJobs] = useState(INITIAL_JOBS);
   const [applications, setApplications] = useState(INITIAL_APPLICATIONS);
@@ -39,6 +41,31 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  // ── Token rehydration on page refresh ──────────────────────────────────────
+  useEffect(() => {
+    const token = localStorage.getItem('hireai_token');
+    if (!token) { setRehydrating(false); return; }
+
+    authApi.me()
+      .then((user) => {
+        setCurrentUser({
+          id:      user.id,
+          name:    user.name,
+          email:   user.email,
+          role:    user.role,
+          title:   user.role === 'recruiter' ? 'Talent Acquisition Manager' : 'Software Developer Candidate',
+          company: user.role === 'recruiter' ? 'TechNova Dynamics' : 'HireAI Workspace',
+          avatar:  user.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+          isActive: user.is_active,
+        });
+      })
+      .catch(() => {
+        // Token is stale/invalid — clear it and show login
+        localStorage.removeItem('hireai_token');
+      })
+      .finally(() => setRehydrating(false));
+  }, []);
+
   // Login handler
   const handleLogin = (user) => {
     setCurrentUser(user);
@@ -46,7 +73,10 @@ export default function App() {
   };
 
   // Logout handler
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      if (!currentUser?.isDemo) await authApi.logout(); // skip API call for demo accounts
+    } catch (_) { /* ignore network errors on logout */ }
     setCurrentUser(null);
     showToast('Signed out of HireAI workspace.');
   };
@@ -111,7 +141,19 @@ export default function App() {
     showToast(`Application submitted! AI Match score: ${newApplication.aiAnalysis.overallMatch}%`);
   };
 
-  // 1. If not authenticated, force full-screen Login Page
+  // 1a. While checking for a saved token, show a minimal loading screen
+  if (rehydrating) {
+    return (
+      <div className="min-h-screen bg-[#05070d] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+          <span className="text-[#9aa3b8] text-sm">Restoring session…</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 1b. If not authenticated, force full-screen Login Page
   if (!currentUser) {
     return <LoginPage onLogin={handleLogin} />;
   }

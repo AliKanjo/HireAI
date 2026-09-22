@@ -461,13 +461,157 @@ export function semanticCVSearchLocal(query, candidates) {
 }
 
 export function queryRAGAssistantLocal(question, jobs, candidates) {
-  const topCandidate = [...candidates].sort((a, b) => (b.aiAnalysis?.overallMatch || 0) - (a.aiAnalysis?.overallMatch || 0))[0];
-  const answer = `Based on grounded candidate records:\n\n🥇 **${topCandidate.candidateName}** — **${topCandidate.aiAnalysis?.overallMatch || 94}% Match**\n   • Strong proficiency in: ${topCandidate.cvSkills?.slice(0, 3).join(', ')}\n   • Experience: ${topCandidate.cvExperienceYears || 5} years`;
-  
+  const q = (question || "").toLowerCase();
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const sorted = [...candidates].sort(
+    (a, b) => (b.aiAnalysis?.overallMatch || 0) - (a.aiAnalysis?.overallMatch || 0)
+  );
+  const top = sorted[0];
+  const allSources = () => [
+    top?.cvFileName || "Candidate_Pool.db",
+    "HireAI_Job_Descriptions.db",
+  ];
+
+  const fmtCandidate = (c, rank) => {
+    const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`;
+    const skills = (c.cvSkills || []).slice(0, 4).join(", ") || "—";
+    const exp = c.cvExperienceYears || "N/A";
+    const score = c.aiAnalysis?.overallMatch ?? "—";
+    return `${medal} **${c.candidateName}** — ${score}% match\n   • Skills: ${skills}\n   • Experience: ${exp} yrs`;
+  };
+
+  // ── intent routing ────────────────────────────────────────────────────────
+
+  // --- "best / top / who should I hire" ---
+  if (/best|top candidate|who should|recommend|strongest|highest match/.test(q)) {
+    const top3 = sorted.slice(0, 3);
+    const lines = top3.map((c, i) => fmtCandidate(c, i + 1)).join("\n\n");
+    const jobHint = jobs[0]?.title || "the open position";
+    return {
+      question,
+      answer: `Based on AI match scores across ${candidates.length} applicants for **${jobHint}**:\n\n${lines}\n\n💡 Recommendation: Shortlist **${top?.candidateName}** for a first-round interview based on skills overlap and experience depth.`,
+      sources: allSources(),
+    };
+  }
+
+  // --- specific skill lookup ---
+  const SKILL_KEYWORDS = [
+    "python","javascript","typescript","react","vue","angular","node","java","spring boot",
+    "c#","php","laravel",".net","docker","kubernetes","aws","azure","gcp","sql","postgresql",
+    "mongodb","redis","fastapi","flask","django","graphql","rest","machine learning","pytorch",
+    "tensorflow","ci/cd","git","linux","microservices","tailwind","figma","agile","scrum",
+  ];
+  const mentionedSkills = SKILL_KEYWORDS.filter(s => q.includes(s));
+
+  if (mentionedSkills.length > 0) {
+    const matched = candidates.filter(c => {
+      const cv = (c.cvSkills || []).map(s => s.toLowerCase());
+      return mentionedSkills.some(sk => cv.some(cvs => cvs.includes(sk)));
+    }).sort((a, b) => (b.aiAnalysis?.overallMatch || 0) - (a.aiAnalysis?.overallMatch || 0));
+
+    if (matched.length === 0) {
+      return {
+        question,
+        answer: `No candidates in the current pool explicitly list **${mentionedSkills.join(", ")}** on their CV.\n\n💡 Consider broadening your search or posting on specialised job boards targeting ${mentionedSkills[0]} talent.`,
+        sources: allSources(),
+      };
+    }
+
+    const lines = matched.slice(0, 4).map((c, i) => fmtCandidate(c, i + 1)).join("\n\n");
+    return {
+      question,
+      answer: `Found **${matched.length} candidate(s)** with strong **${mentionedSkills.join(" / ")}** proficiency:\n\n${lines}`,
+      sources: [matched[0]?.cvFileName || "Candidate_Pool.db", "Skill_Index.db"],
+    };
+  }
+
+  // --- match distribution / summary ---
+  if (/distribution|summary|overview|average|statistics|breakdown|all vacanc|across/.test(q)) {
+    const total = candidates.length;
+    const avg = total > 0
+      ? Math.round(candidates.reduce((s, c) => s + (c.aiAnalysis?.overallMatch || 0), 0) / total)
+      : 0;
+    const excellent = candidates.filter(c => (c.aiAnalysis?.overallMatch || 0) >= 85).length;
+    const good      = candidates.filter(c => { const m = c.aiAnalysis?.overallMatch || 0; return m >= 70 && m < 85; }).length;
+    const weak      = candidates.filter(c => (c.aiAnalysis?.overallMatch || 0) < 70).length;
+    const jobBreakdown = jobs.map(j => {
+      const jApps = candidates.filter(c => c.jobId === j.id);
+      const jAvg = jApps.length > 0
+        ? Math.round(jApps.reduce((s, c) => s + (c.aiAnalysis?.overallMatch || 0), 0) / jApps.length)
+        : "—";
+      return `• **${j.title}**: ${jApps.length} applicants, avg match ${jAvg}%`;
+    }).join("\n");
+
+    return {
+      question,
+      answer: `📊 **Match Distribution — ${total} Candidates Across ${jobs.length} Vacancies**\n\n🟢 Excellent (≥85%): ${excellent} candidates\n🟡 Good (70–84%): ${good} candidates\n🔴 Weak (<70%): ${weak} candidates\n📈 Pool Average: **${avg}%**\n\n**Per vacancy:**\n${jobBreakdown || "No job breakdown available."}\n\n💡 Focus shortlisting efforts on the ${excellent} excellent-match candidates first.`,
+      sources: allSources(),
+    };
+  }
+
+  // --- status / pipeline / funnel ---
+  if (/pipeline|funnel|status|shortlisted|interview|hired|rejected|pending/.test(q)) {
+    const counts = candidates.reduce((acc, c) => {
+      const s = c.status || "Under Review";
+      acc[s] = (acc[s] || 0) + 1;
+      return acc;
+    }, {});
+    const lines = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([s, n]) => `• **${s}**: ${n} candidate(s)`)
+      .join("\n");
+    return {
+      question,
+      answer: `📋 **Recruitment Pipeline Status** (${candidates.length} total applicants)\n\n${lines}\n\n💡 ${counts["Under Review"] > 0 ? `${counts["Under Review"]} candidate(s) are still awaiting review — consider scheduling AI screening sessions.` : "All candidates have been reviewed."}`,
+      sources: allSources(),
+    };
+  }
+
+  // --- specific job title lookup ---
+  const mentionedJob = jobs.find(j => q.includes(j.title?.toLowerCase()));
+  if (mentionedJob) {
+    const jCands = candidates
+      .filter(c => c.jobId === mentionedJob.id)
+      .sort((a, b) => (b.aiAnalysis?.overallMatch || 0) - (a.aiAnalysis?.overallMatch || 0));
+    const lines = jCands.slice(0, 3).map((c, i) => fmtCandidate(c, i + 1)).join("\n\n");
+    return {
+      question,
+      answer: `Top applicants for **${mentionedJob.title}** (${jCands.length} total):\n\n${lines || "No applicants yet for this position."}`,
+      sources: [`${mentionedJob.title?.replace(/ /g, "_")}.desc`, "Candidate_Pool.db"],
+    };
+  }
+
+  // --- remote / HR policy / compensation ---
+  if (/policy|remote|compensation|salary|benefit|hr|holiday|leave|work from home/.test(q)) {
+    return {
+      question,
+      answer: `📄 **HireAI HR Policy Summary** (from indexed HR documents)\n\n• 🌍 **Remote Work**: Hybrid-first policy — up to 3 remote days/week for all roles.\n• 💰 **Compensation**: Market-rate benchmarking conducted bi-annually. Salary bands reviewed every Q1.\n• 🏖️ **Leave**: 25 days annual + local public holidays + 5 mental-health days.\n• 🎓 **L&D Budget**: $1,500/year per employee for certifications and conferences.\n• 🏥 **Health**: Comprehensive private health and dental plan included from day 1.\n\n💡 For role-specific packages contact the People team via the HR portal.`,
+      sources: ["HireAI_HR_Policy_2024.pdf", "Compensation_Framework.pdf"],
+    };
+  }
+
+  // --- experience / seniority ---
+  if (/experience|senior|junior|years|seniority/.test(q)) {
+    const avgExp = candidates.length > 0
+      ? (candidates.reduce((s, c) => s + (c.cvExperienceYears || 0), 0) / candidates.length).toFixed(1)
+      : "—";
+    const senior = candidates.filter(c => (c.cvExperienceYears || 0) >= 5).length;
+    const mid    = candidates.filter(c => { const e = c.cvExperienceYears || 0; return e >= 2 && e < 5; }).length;
+    const junior = candidates.filter(c => (c.cvExperienceYears || 0) < 2).length;
+    return {
+      question,
+      answer: `👔 **Candidate Experience Breakdown** (${candidates.length} applicants)\n\n• Senior (5+ yrs): **${senior}** candidates\n• Mid-level (2–5 yrs): **${mid}** candidates\n• Junior (<2 yrs): **${junior}** candidates\n• Pool average: **${avgExp} years**\n\n🥇 Most experienced: **${sorted[0]?.candidateName}** (${sorted[0]?.cvExperienceYears || "N/A"} yrs, ${sorted[0]?.aiAnalysis?.overallMatch || "—"}% match)`,
+      sources: allSources(),
+    };
+  }
+
+  // --- default: answer about the full pool generically ---
+  const top3Lines = sorted.slice(0, 3).map((c, i) => fmtCandidate(c, i + 1)).join("\n\n");
   return {
     question,
-    answer,
-    sources: [topCandidate.cvFileName || "Candidate_CV.pdf", "Senior_Job_Description.desc"]
+    answer: `Here's a grounded summary based on your current candidate pool and job data:\n\n**Top 3 Candidates by AI Match Score:**\n\n${top3Lines}\n\n💡 Tip: Ask me about specific skills, job titles, pipeline status, match distribution, or HR policies for a more targeted answer.`,
+    sources: allSources(),
   };
 }
 
