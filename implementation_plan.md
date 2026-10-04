@@ -35,9 +35,9 @@ graph TD
 
 | Role | Key Capabilities |
 | :--- | :--- |
-| **👤 Candidate** | Profile management, job search & filters, 1-click apply with PDF CV upload, real-time application status tracker, interview schedule view. |
-| **👨‍💼 Recruiter** | Company profile, job vacancy posting with structured skill/exp criteria, AI CV extraction, candidate ranking table by match %, AI interview question generator, pipeline status management (`Applied` -> `Under Review` -> `Shortlisted` -> `Interview` -> `Selected/Rejected`), analytics dashboard. |
-| **🛡️ Administrator** | Platform oversight, user & company moderation, job listing audit, system health & activity metrics. |
+| ** Candidate** | Profile management, job search & filters, 1-click apply with PDF CV upload, real-time application status tracker, interview schedule view. |
+| ** Recruiter** | Company profile, job vacancy posting with structured skill/exp criteria, AI CV extraction, candidate ranking table by match %, AI interview question generator, pipeline status management (`Applied` -> `Under Review` -> `Shortlisted` -> `Interview` -> `Selected/Rejected`), analytics dashboard. |
+| ** Administrator** | Platform oversight, user & company moderation, job listing audit, system health & activity metrics. |
 
 ---
 
